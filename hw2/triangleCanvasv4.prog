@@ -1,0 +1,334 @@
+//Rebecca Aloisio
+//CSCI 360
+//Fall 2018
+//Osgood curve
+
+
+function TriangleCanvas(width, height){
+    
+    if(width == undefined || width < 40){
+        width = 300;
+    }
+    
+    if (height == undefined || height < 40){
+        height = 300;
+    }
+    
+    //create the canvas
+    var canvas = document.createElement('canvas')
+        canvas.height = height;
+        canvas.width = width;
+        
+    //add it to the document
+    document.body.appendChild(canvas);
+    
+    //save some info as local values
+    this.width = width;
+    this.height = height;
+    
+    var gl = WebGLUtils.setupWebGL(canvas);
+    if (!gl) {
+        alert ("WebGL isn't available");
+    }
+
+    this.gl = gl;
+
+    gl.viewport(0,0, width, height);
+    
+    program = initShaders(gl, "vertex-shader","fragment-shader");
+    gl.useProgram(program);
+
+    // a buffer for the vertexes
+    this.vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vBuffer);
+
+    vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition,2,gl.FLOAT, false,0,0);
+    gl.enableVertexAttribArray(vPosition);
+
+    // a buffer for the colors
+    this.cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.cBuffer);
+
+    colorAttribute = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(colorAttribute,3,gl.FLOAT, false,0,0);
+    gl.enableVertexAttribArray(colorAttribute);
+    
+	this.Init();
+    
+    return this;
+}
+
+
+
+TriangleCanvas.prototype = {
+	Init: function(){
+		//these are the default starting conditions if none have been specified
+		this.gl.clearColor(1.0, 1.0, 1.0, 3.0);
+		this.start = "equilateral";
+		this.gap = "0.1";
+        this.fillMethod = "random";
+        this.colors = [];
+        
+        this.Reset();
+	},
+    
+    MakeEquilateral: function(){
+        //creates an equilateral triangle as the starting configuration
+        var p1 = vec2(-0.8, -0.8);
+        var p2 = vec2(0, Math.sqrt(1.92) - 0.8);
+        var p3 = vec2(0.8, -0.8);
+
+        this.vertex = [p1, p2, p3];
+        this.SetFillColor(3);
+        
+        return;
+    },
+    
+    MakeIsosceles: function(){
+        //creates two equilateral triangles as the starting configuration
+        var p1 = vec2(-0.8, 0.8);
+        var p2 = vec2(-0.8, -0.8);
+        var p3 = vec2(0.8, -0.8);
+        
+        var p4 = vec2(0.8, -0.8);
+        var p5 = vec2(0.8, 0.8);
+        var p6 = vec2(-0.8, 0.8);
+        
+        this.vertex = [p1, p2, p3, p4, p5, p6];
+        this.SetFillColor(6);
+        
+        return;
+    },
+    
+    UpdateBuffers: function() {
+        //Updates the data in the buffers
+        gl = this.gl;
+        // change the vertex data
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER,flatten(this.vertex),gl.DYNAMIC_DRAW);
+
+        // change the color data
+        gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER,flatten(this.colors),gl.DYNAMIC_DRAW);
+    },
+	
+	Reset: function(){
+		//returns the canvas to its starting configuration; however,
+		//	this doesn't reset the fill colors
+		this.colors = [];
+		if(this.start == "equilateral"){
+            this.MakeEquilateral();
+        } else if(this.start == "isosceles"){
+            this.MakeIsosceles();
+        }
+		this.Clear();
+        this.UpdateBuffers();
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, this.vertex.length);
+        
+        return;
+	},
+	
+    SetClearColor: function(color){
+		//Sets the background color
+        if(color == "white"){
+            this.gl.clearColor(1.0, 1.0, 1.0, 3.0);
+        }else{
+            this.gl.clearColor(0.0, 0.0, 0.0, 3.0);
+        }
+        
+        this.Redisplay();
+        
+        return;
+    },
+    
+    SetFillMethod: function(fillMethod){
+        var length = this.colors.length;
+        var clearList = [];
+        this.colors = clearList;
+		//sets the color to fill the triangles
+		this.fillMethod = fillMethod;
+        this.SetFillColor(length);
+		this.Redisplay();
+		
+		return;
+	},
+	
+
+    SetFillColor: function(number){
+	//sets the color of the verteces
+        var i;
+        var interval = 1.0 / number;
+        var third = number / 3;
+		var maxRed = 1.0 - third * interval;
+		var maxGreen = 2 * third * interval;
+        for(i = 0; i < number; i++){
+            var c1;
+            if(this.fillMethod == "random"){
+                c1 = vec3(Math.random(), Math.random(),Math.random());
+            }else if(this.fillMethod == "posBased"){
+                if(i < third){
+                    c1 = vec3(Math.max(0.0, 1.0 - i * interval), Math.min(1.0, i * interval), 0.0);
+                } else if(i < 2 * third){
+                    c1 = vec3(Math.max(0.0, maxRed - interval * (i - third + 1)), Math.min(1.0, interval * (i + 2)), Math.min(1.0, (i - third) * interval));
+                } else{
+                    c1 = vec3(Math.max(0.0, maxRed - interval * (i - third + 1)), Math.max(0, maxGreen - (i - 2 * third + 1) * interval), Math.min(1.0, (i - third + 1) * interval));
+                }
+			} else if(this.fillMethod == "red"){
+                c1 = vec3(1.0, 0.0, 0.0);
+            } else if(this.fillMethod == "orange"){
+                c1 = vec3(1.0, 0.6, 0);
+            } else if(this.fillMethod == "yellow"){
+                c1 = vec3(1.0, 1.0, 0);
+            } else if(this.fillMethod == "green"){
+                c1 = vec3(0.0, 0.5, 0.0);
+            } else if(this.fillMethod == "blue"){
+                c1 = vec3(0.0, 0.0, 1.0);
+            } else if(this.fillMethod == "indigo"){
+                c1 = vec3(0.3, 0, 0.5);
+            } else if(this.fillMethod == "purple"){
+                c1 = vec3(0.5, 0, 0.5);
+            } else if(this.fillMethod == "white"){
+                c1 = vec3(1.0, 1.0, 1.0);
+            }else{
+                c1 = vec3(0, 0, 0);
+            }
+			
+            this.colors.push(c1);
+        }
+        
+        return;
+        
+    },
+
+    SetGap: function(value){
+		//changes the amount of triangle removed during a split
+        if(value < 1.0 && value >= 0){
+            
+            this.gap = value;
+        }
+        
+        return;
+    },
+    
+    SetStart: function(start){
+		//This sets the starting configuration of the triangle(s)
+        if(start == "equilateral"){
+            this.start = start;
+        } else if(start == "isosceles"){
+            this.start = start;
+        }else{
+            this.start = "equilateral";
+        }
+        
+        this.Clear();
+        this.Reset();
+        
+        return;
+    },
+    
+    Clear: function(){
+		//Wipes the canvas clear of all triangles
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        
+        return;
+    },
+    
+    Redisplay: function(){
+		//redraws all of the triangles
+        this.Clear();
+        
+		this.UpdateBuffers();
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, this.vertex.length);
+        
+        return;
+    },
+    
+    Distance: function(p1, p2){
+		//calculates the distance between two points and returns it
+		var a = p1[0] - p2[0];
+		var b = p1[1] - p2[1];
+		return Math.sqrt(a*a+b*b);
+	},
+
+	NewPoint: function(p1, p2, amount){
+		//This takes two points and returns a point that on the line between them.
+		//	The point is at amount of the distance, where amount is a decimal percentage
+        
+        var newP = mix(p1, p2, amount);
+        
+		return newP;
+	},
+    
+    LongestSide: function(triangle){
+		//Determines the longest side of a triangle and returns it with its length
+        var sideLength = [this.Distance(triangle[0], triangle[4]), triangle[0], triangle[1], triangle[4], triangle[5]];
+
+        return sideLength;
+        
+    },
+    
+    OpPoint: function(side, triangle){
+	//returns the point opposite the longest side
+        var point;
+        if(side[1] == triangle[0] && side[3] == triangle[2]){
+            point = vec2(triangle[4][0], triangle[4][1]);
+            this.opColor = triangle[5];
+        }else if(side[1] == triangle[2]){
+            point = vec2(triangle[0][0], triangle[0][1]);
+            this.opColor = triangle[1];
+        }else{
+            point = vec2(triangle[2][0], triangle[2][1]);
+            this.opColor = triangle[3];
+        }
+        return point;
+    },
+    
+    Step: function(){
+		//This function calculates the divisions in the triangle(s)
+        var i;
+        var newVert = [];
+        var newColor = [];
+        for(i = 0; i < this.vertex.length; i += 3){
+            var p1 = this.vertex[i];
+            var p2 = this.vertex[i+1];
+            var p3 = this.vertex[i+2];
+            
+            var c1 = this.colors[i];
+            var c2 = this.colors[i+1];
+            var c3 = this.colors[i+2];
+            
+            var triangle = [p1, c1, p2, c2, p3, c3];
+            var side = this.LongestSide(triangle);
+            var opPoint = this.OpPoint(side,triangle);
+			
+            if(side[0] > 0){
+                //first triangle
+                var np = this.NewPoint(side[1], side[3], 0.5 - this.gap/2);
+                newVert.push(side[1], np, opPoint);
+				
+                var nc = mix(side[2], side[4], 0.5 - this.gap/2);
+                newColor.push(side[2], nc, this.opColor);
+				
+				//second triangle
+                np = this.NewPoint(side[1], side[3], 0.5 + this.gap/2);
+                newVert.push(opPoint, np, side[3]);
+				
+                nc = mix(side[2], side[4], 0.5 + this.gap/2);
+                newColor.push(this.opColor, nc, side[4]);
+            }else{
+                newVert = this.vertex;
+                newColor = this.colors;
+            }
+        }
+        
+        this.vertex = newVert;
+		this.colors = newColor;
+		
+        this.UpdateBuffers();
+        
+        this.Redisplay();
+        
+        return;
+    },
+}

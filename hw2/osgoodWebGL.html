@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script id = "vertex-shader" type = "x-shader/x-vertex">
+        attribute vec4 vPosition;
+        attribute vec4 vColor;
+        varying vec4 f_Color;
+        
+        void main(){
+            gl_Position = vPosition;
+            f_Color = vColor;
+        }
+    </script>
+    
+    <script id = "fragment-shader" type = "x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 f_Color;
+        
+        void main(){
+            gl_FragColor = f_Color;
+        }
+    </script>
+    
+    <script type = "text/javascript" src = "../Common/webgl-utils.js"> </script>
+    <script type = "text/javascript" src = "../Common/initShaders.js"> </script>
+    <script type = "text/javascript" src = "../Common/MV.js"> </script>
+    <script type = "text/javascript" src = "triangleCanvasv4.prog"> </script>
+</head>
+
+<body>
+<h1>Osgood Curve</h1>
+
+<script>
+	//create a default canvas.
+	var WIDTH = 500;
+	var HEIGHT = 500;
+	var canvas = new TriangleCanvas(WIDTH, HEIGHT);
+
+</script>
+
+<!--These are all the buttons and input-->
+<p>
+<!--This is the percentage of the line removed each iteration-->
+Gap Size:
+<input 
+    type = "text" 
+    name = "Gap Size"
+    maxLength = "3"
+    size = "3"
+    id = "GapSize", onchange = "canvas.SetGap(this.value)">
+<p>
+<!--A button that calculates & displays the next iteration of the curve -->
+<button type = "button" onclick = "canvas.Step()"> Step </button>
+<!--A button that redraws the current shape -->
+<button type = "button" onclick = "canvas.Redisplay()"> Redraw </button>
+<!--A button that returns to the starting instance of the current shape.
+Colors & drawing switches are not reset -->
+<button type = "button" onclick = "canvas.Reset()"> Reset </button>
+<p>
+<!--The color of the blank canvas -->
+Background Color:
+<select id = "BGColor" onchange = "canvas.SetClearColor(this.value); canvas.Redisplay()">
+    <option value = "white"> white </option>
+    <option value = "black"> black </option>
+</select>
+<p>
+<!--The color used to fill the triangles -->
+Fill Color:
+<select id = "FillMethod" onchange = "canvas.SetFillMethod(this.value); canvas.Redisplay()">
+	<option value = "random"> random </option>
+    <option value = "posBased"> Position Based </option>
+	<option value = "red"> red </option>
+	<option value = "orange"> orange </option>
+	<option value = "yellow"> yellow </option>
+	<option value = "green"> green </option>
+    <option value = "blue"> blue </option>
+    <option value = "indigo"> indigo </option>
+	<option value = "purple"> purple </option>
+	<option value = "white"> white </option>
+    <option value = "black"> black </option>
+</select>
+<p>
+<!--A selection of starting shapes -->
+Starting Configuration:
+<select id = "StartConfig"  onchange = "canvas.SetStart(this.value)">
+    <option value = "equilateral"> Equilateral Triangle </option>
+    <option value = "isosceles" > Isosceles Triangles </option>
+</select>
+
+<p>
+
+<b>
+Problems Encountered:
+</b>
+For some reason, colors like orange and yellow and indigo and purple are being displayed as the same color even though I entered in different rgb values for them.  I found that having their values fit in the 0.0 - 1.0 range fixed the issue.  
+<p>
+I had many issues getting the position based fill method to work.  This was in part because I was struggling to get color to stay with the vertex.  I eventually was able to correct it.  While I thought I had saved pictures of my errors, they all appear to be blank.  Overall, the errors I encountered while trying to get it to work involved colors not being stored in the correct locations and the triangles occationally moving all over the screen.
+<p>
+I also had issues with the triangles splitting.  Due to the fact that the side length is stored as floats, there were times when two triangles that were identical ended up splitting on different sides, likely due to slight differences in the float values of their side lengths.  I suspect this is what was causing the issue because when I rounded the numbers to so many decimal places, similar triangles split on the same side again.  However, the issue still continued because even though I rounded, the side lengths kept getting smaller and smaller.  This led to the rounding causing problems eventually.  The solution I eventually discovered was that, with how I had set up my triangles, the hypotenuse was always at the same points.  Since no side can be longer than the hypotenuse, I simply find the hypotenuse and split there.
+<p>
+<b>
+Interesting Techniques Employed:
+</b>
+I attempted to make it so that colors are transported with the points.  Whenever new points are made I use the mix() function to to keep the color that is at that location connected with the point.
+<p>
+<b>
+Sources of Information:
+</b>
+I heavily reference Dr. Bennett's notes.  Particularly his <a href = "http://mirkwood.cs.edinboro.edu/~bennett/f360-18/serpinski/serpinski3.php">Serpinski Gasket with Triangles</a> code.
+<p>
+<b>
+Notes on Additions:
+</b>
+I have an isosceles triangle starting configuration that creates two isosceles triangles that form a square.  It can create some interesting shapes, like snowflakes, depending on how you set the gap size.
+<p>
+I don't know if it would be considered an addition, but the Position Based fill method works differently depending on when it is set.  If you set the fill method to Position Based before splitting the triangle, the colors will be based on where the point was located in the original triangle.  If you change it after splitting, then the vertices will be colored based on where they are in the vertex list.
+
+
+</body>
+</html>
