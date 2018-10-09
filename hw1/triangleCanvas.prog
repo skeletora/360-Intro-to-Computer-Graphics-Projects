@@ -1,0 +1,295 @@
+//Rebecca Aloisio
+//CSCI 360
+//Fall 2018
+//Osgood curve
+
+
+function TriangleCanvas(width, height){
+    
+    if(width == undefined || width < 40){
+        width = 300;
+    }
+    
+    if (height == undefined || height < 40){
+        height = 300;
+    }
+    
+    //create the canvas
+    var canvas = document.createElement('canvas')
+        canvas.height = height;
+        canvas.width = width;
+        
+    //add it to the document
+    document.body.appendChild(canvas);
+    
+    //save some info as local values
+    this.width = width;
+    this.height = height;
+    
+    this.ctx = canvas.getContext("2d");
+    
+	this.Init();
+	this.Reset();
+    
+    return this;
+}
+
+
+
+TriangleCanvas.prototype = {
+	Init: function(){
+		//these are the default starting conditions if none have been specified
+		this.clearColor = "white";
+		this.fillColor = "indigo";
+		this.fillOn = "on";
+        this.gradOn = "off";
+		this.edgeColor = "green";
+		this.edgeOn = "on";
+		this.start = "equilateral";
+		this.gap = "0.1";
+	},
+    
+    MakeEquilateral: function(){
+        //creates an equilateral triangle as the starting configuration
+        var p1 = {"x":20, "y":this.height - 20};
+		var p2 = {"x":this.width - 20, "y":this.height - 20};
+		var p3 = {"x":this.width / 2, 
+                    "y":this.height - Math.sqrt((this.width - 40)*(this.width - 40) - 
+                        ((this.width - 40)*(this.width - 40))/4)};
+		var tri = {"A":p1, "B":p2, "C":p3};
+		this.list = [tri];
+        
+        return;
+    },
+    
+    MakeIsosceles: function(){
+        //creates two isosceles triangles as the starting configuration
+        var p1 = {"x":20, "y":this.height - 20};
+		var p2 = {"x":this.width - 20, "y":this.height - 20};
+		var p3 = {"x":20, "y":this.height - this.Distance(p1, p2)};
+		var tri1 = {"A":p1, "B":p2, "C":p3};
+		this.list = [tri1];
+        
+        p1 = {"x":this.width - 20, "y":40};
+		p2 = {"x":this.width - 20, "y":this.height - 20};
+		p3 = {"x":20, "y":this.height - this.Distance(p1, p2) - 20};
+		var tri2 = {"A":p1, "B":p2, "C":p3};
+        this.list.push(tri2);
+        
+        return;
+    },
+	
+	Reset: function(){
+		//returns the canvas to its starting configuration; however,
+		//	this doesn't reset the fill and edge colors
+		if(this.start == "equilateral"){
+            this.MakeEquilateral();
+        } else if(this.start == "isosceles"){
+            this.MakeIsosceles();
+        }
+		
+		for(var i = 0; i < this.list.length; i++){
+            this.MakeTriangle(this.list[i]);
+        }
+	},
+	
+    SetClearColor: function(color){
+		//Sets the background color
+        this.clearColor = color;
+        
+        return;
+    },
+    
+    SetFill: function(fillColor){
+		//sets the color to fill the triangles
+		this.fillColor = fillColor;
+		
+		return;
+	},
+    
+    SetFillOn: function(fillOn){
+		//This value determines if the triangles are filled in or not
+        this.fillOn = fillOn;
+        
+        return;
+    },
+    
+    SetGradientOn: function(gradOn){
+		//This value determines if the triangles have a gradient or not
+        this.gradOn = gradOn;
+        
+        return;
+    },
+	
+	SetEdge: function(edgeColor){
+		//changes the edge color
+		this.edgeColor = edgeColor;
+		
+		return;
+	},
+    
+    SetEdgeOn: function(edgeOn){
+		//determines if the edges are drawn or not
+        this.edgeOn = edgeOn;
+        
+        return;
+    },
+    
+    SetGap: function(value){
+		//changes the amount of triangle removed during a split
+        if(value < 1.0 && value >= 0){
+            
+            this.gap = value;
+        }
+        
+        return;
+    },
+    
+    SetStart: function(start){
+		//This sets the starting configuration of the triangle(s)
+        if(start == "equilateral"){
+            this.start = start;
+        } else if(start == "isosceles"){
+            this.start = start;
+        }else{
+            this.start = "equilateral";
+        }
+        
+        this.Clear();
+        this.Reset();
+        
+        return;
+    },
+    
+    Clear: function(){
+		//Wipes the canvas clear of all triangles
+        this.ctx.fillStyle = this.clearColor;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        return;
+    },
+	
+	MakeTriangle: function(tri){
+		//draws a given triangle
+		this.ctx.beginPath();
+		this.ctx.moveTo(tri.A.x, tri.A.y);
+		this.ctx.lineTo(tri.B.x, tri.B.y);
+		this.ctx.lineTo(tri.C.x, tri.C.y);
+		this.ctx.lineTo(tri.A.x, tri.A.y);
+        this.ctx.closePath();
+		
+        if(this.fillOn == "on"){
+            if(this.gradOn == "on"){
+                //Gives the triangle a gradient that fades to the background color
+                var gradient = this.ctx.createLinearGradient(0,0,0, this.height);
+                gradient.addColorStop(0, this.clearColor);
+                gradient.addColorStop(1, this.fillColor);
+                this.ctx.fillStyle = gradient;
+
+            }else{
+                this.ctx.fillStyle = this.fillColor;
+            }
+            this.ctx.fill();
+        }
+        
+        if(this.edgeOn == "on"){
+            this.ctx.strokeStyle = this.edgeColor;
+            this.ctx.stroke();
+        }
+		
+		return;
+	},
+    
+    Redisplay: function(){
+		//redraws all of the triangles
+        this.Clear();
+        
+        for(var i = 0; i < this.list.length; i++){
+            this.MakeTriangle(this.list[i]);
+        }
+    },
+    
+    Distance: function(p1, p2){
+		//calculates the distance between two points and returns it
+		var a = p1.x - p2.x;
+		var b = p1.y - p2.y
+		return Math.sqrt(a*a+b*b);
+	},
+	
+	Interp: function(a, b, s){
+		//Takes two points and finds the point that is s of the way between them,
+		//	where s is a decimal representing a percentage
+		return a * (1 - s) + b * s;	
+	},
+	
+	NewPoint: function(p1, p2, amount){
+		//This takes two points and returns a point that on the line between them.
+		//	The point is at amount of the distance, where amount is a decimal percentage
+		var a = this.Interp(p1.x, p2.x, amount);
+		var b = this.Interp(p1.y, p2.y, amount);
+        
+        var p3 = {"x":a, "y":b};
+        
+		return p3;
+	},
+    
+    LongestSide: function(triangle){
+		//Determines the longest side of a triangle and returns it with its length
+        var sideLength = {"distance":this.Distance(triangle.A, triangle.B), "p1":triangle.A, "p2":triangle.B};
+        var dist1 = this.Distance(triangle.B, triangle.C);
+        var dist2 = this.Distance(triangle.C, triangle.A);
+        
+        if(dist1 > sideLength.distance){
+            sideLength.distance = dist1;
+            sideLength.p1 = triangle.B;
+            sideLength.p2 = triangle.C;
+        }
+        if(dist2 > sideLength.distance){
+            sideLength.distance = dist2;
+            sideLength.p1 = triangle.C;
+            sideLength.p2 = triangle.A;
+        }
+        
+        return sideLength;
+        
+    },
+    
+    OpSide: function(side, triangle){
+		//Kinda incorrectly named.  Returns the point opposite the longest side of the triangle
+        var point;
+        if(side.p1 == triangle.A){
+            point = triangle.C;
+        }else if(side.p1 == triangle.B){
+            point = triangle.A;
+        }else{
+            point = triangle.B;
+        }
+        
+        return point;
+    },
+    
+    Step: function(){
+		//This function calculates the divisions in the triangle(s)
+        var i;
+        newList = [];
+        for(i = 0; i < this.list.length; i++){
+            var side = this.LongestSide(this.list[i]);
+            if(side.distance > 1){
+                var np = this.NewPoint(side.p1, side.p2, 0.5 - this.gap/2);
+                var nt1 = {"A":side.p1, "B":np, "C":this.OpSide(side,this.list[i])};
+                newList.push(nt1);
+                np = this.NewPoint(side.p1, side.p2, 0.5 + this.gap/2)
+                var nt2 = {"A":np, "B":side.p2, "C":this.OpSide(side,this.list[i])};
+                newList.push(nt2);
+            }else{
+                newList = this.list;
+            }
+        }
+        
+        this.list = newList;
+        
+        this.Redisplay();
+        
+        return;
+    },
+}

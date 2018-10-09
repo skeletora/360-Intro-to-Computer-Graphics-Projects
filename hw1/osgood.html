@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type = "text/javascript" src = "triangleCanvas.prog"> </script>
+</head>
+
+<body>
+<h1>Osgood Curve</h1>
+
+<script>
+	//create a default canvas.
+	var WIDTH = 500;
+	var HEIGHT = 500;
+	var canvas = new TriangleCanvas(WIDTH, HEIGHT);
+
+	canvas.Redisplay();
+</script>
+
+<!--These are all the buttons and input-->
+<p>
+<!--This is the percentage of the line removed each iteration-->
+Gap Size:
+<input 
+    type = "text" 
+    name = "Gap Size"
+    maxLength = "3"
+    size = "3"
+    id = "GapSize", onchange = "canvas.SetGap(this.value)">
+<p>
+<!--A button that calculates & displays the next iteration of the curve -->
+<button type = "button" onclick = "canvas.Step()"> Step </button>
+<!--A button that redraws the current shape -->
+<button type = "button" onclick = "canvas.Redisplay()"> Redraw </button>
+<!--A button that returns to the starting instance of the current shape.
+Colors & drawing switches are not reset -->
+<button type = "button" onclick = "canvas.Reset()"> Reset </button>
+<p>
+<!--The color of the blank canvas -->
+Background Color:
+<select id = "BGColor" onchange = "canvas.SetClearColor(this.value); canvas.Redisplay()">
+    <option value = "white"> white </option>
+    <option value = "black"> black </option>
+</select>
+<p>
+<!--The color used to fill the triangles -->
+Fill Color:
+<select id = "FillColor" onchange = "canvas.SetFill(this.value); canvas.Redisplay()">
+	<option value = "indigo"> indigo </option>
+	<option value = "red"> red </option>
+	<option value = "orange"> orange </option>
+	<option value = "yellow"> yellow </option>
+	<option value = "green"> green </option>
+    <option value = "blue"> blue </option>
+	<option value = "purple"> purple </option>
+	<option value = "white"> white </option>
+    <option value = "black"> black </option>
+</select>
+<!--A boolean flag, determines if the triangles are filled -->
+Fill:
+<select id = "FillOn" onchange = "canvas.SetFillOn(this.value); canvas.Redisplay()">
+    <option value = "on"> on </option>
+    <option value = "off"> off </option>
+</select>
+<!--Might want to remove this -->
+Gradient
+<select id = "Gradient" onchange = "canvas.SetGradientOn(this.value); canvas.Redisplay()">
+    <option value = "off"> off </option>
+    <option value = "on"> on </option>
+</select>
+<p>
+<!--The color used to color the edges -->
+Edge Color:
+<select id = "EdgeColor" onchange = "canvas.SetEdge(this.value); canvas.Redisplay()">
+    <option value = "green"> green </option>
+	<option value = "red"> red </option>
+	<option value = "orange"> orange </option>
+	<option value = "yellow"> yellow </option>
+    <option value = "blue"> blue </option>
+    <option value = "indigo"> indigo </option>
+	<option value = "purple"> purple </option>
+	<option value = "white"> white </option>
+    <option value = "black"> black </option>
+</select>
+<!--A boolean flag, determines if the edges are drawn -->
+Draw Edge:
+<select id = "EdgeOn" onchange = "canvas.SetEdgeOn(this.value); canvas.Redisplay()">
+    <option value = "on"> on </option>
+    <option value = "off"> off </option>
+</select>
+<p>
+<!--A selection of starting shapes -->
+Starting Configuration:
+<select id = "StartConfig"  onchange = "canvas.SetStart(this.value)">
+    <option value = "equilateral"> Equilateral Triangle </option>
+    <option value = "isosceles" > Isosceles Triangles </option>
+</select>
+
+<p>
+
+<b>
+Problems Encountered:
+</b>
+The main issue I encountered was the triangles deleting themselves once the divisions
+got to less than a pixel.  In my attempts to fix it, I created some interesting types
+of iterations that were incorrect.  For example, one time, whenever I clicked the step
+button, I think it was splitting the triangle, but only storing 1 of the triangles.
+the smaller triangles would spiral around the canvas toward the center.  I eventually 
+came up with an appropriate solution.
+<p>
+<b>
+Interesting Techniques Employed:
+</b>
+Not sure if my techniques are very interesting, but I found implementing the gradient
+fun and making the isosceles configuration.
+<p>
+<b>
+Sources of Information:
+</b>
+I heavily referenced Dr. Bennett's notes and examples in order to make this program.
+I also used websites that provided lists of html canvas commands and supported color
+names.
+<p>
+<b>
+Notes on Additions:
+</b>
+The gradient button will cause a gradient from the background color to the specified
+fill color and it will go from top to bottom.  It defaults to off.
+
+
+</body>
+</html>
